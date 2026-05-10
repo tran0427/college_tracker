@@ -701,27 +701,22 @@
     <div class="stat">
       <div class="stat-label">Total Schools</div>
       <div class="stat-value" id="stat-total">—</div>
-      <div class="stat-sub" id="stat-total-sub">in the atlas</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Avg. OOS Cost</div>
-      <div class="stat-value" id="stat-avg">—</div>
-      <div class="stat-sub">cost of attendance / yr</div>
+      <div class="stat-sub" id="stat-total-sub">in the tracker</div>
     </div>
     <div class="stat">
       <div class="stat-label">On Shortlist</div>
       <div class="stat-value" id="stat-shortlist">—</div>
-      <div class="stat-sub">researching · visiting · applying</div>
+      <div class="stat-sub">researching · visited · applied</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Most Affordable</div>
-      <div class="stat-value" id="stat-min"><span class="small">—</span></div>
-      <div class="stat-sub" id="stat-min-name">—</div>
+      <div class="stat-label">Public</div>
+      <div class="stat-value" id="stat-public">—</div>
+      <div class="stat-sub">state universities</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Most Expensive</div>
-      <div class="stat-value" id="stat-max"><span class="small">—</span></div>
-      <div class="stat-sub" id="stat-max-name">—</div>
+      <div class="stat-label">Private</div>
+      <div class="stat-value" id="stat-private">—</div>
+      <div class="stat-sub">private institutions</div>
     </div>
   </section>
 
@@ -1147,31 +1142,14 @@ function render() {
 function renderStats(filtered) {
   const all = state.colleges;
   $("#stat-total").innerHTML = all.length + (filtered.length !== all.length ? `<span class="small"> · ${filtered.length} shown</span>` : "");
-  $("#stat-total-sub").textContent = filtered.length === all.length ? "in the atlas" : "after filters";
-
-  const costs = all.map(c => c.cost).filter(c => c && c > 0);
-  if (costs.length > 0) {
-    const avg = Math.round(costs.reduce((a, b) => a + b, 0) / costs.length);
-    $("#stat-avg").textContent = fmtMoney(avg);
-    const min = Math.min(...costs);
-    const max = Math.max(...costs);
-    const minSchool = all.find(c => c.cost === min);
-    const maxSchool = all.find(c => c.cost === max);
-    $("#stat-min").innerHTML = fmtMoney(min);
-    $("#stat-min-name").textContent = minSchool ? minSchool.name : "—";
-    $("#stat-max").innerHTML = fmtMoney(max);
-    $("#stat-max-name").textContent = maxSchool ? maxSchool.name : "—";
-  } else {
-    $("#stat-avg").textContent = "—";
-    $("#stat-min").innerHTML = "—";
-    $("#stat-max").innerHTML = "—";
-    $("#stat-min-name").textContent = "—";
-    $("#stat-max-name").textContent = "—";
-  }
+  $("#stat-total-sub").textContent = filtered.length === all.length ? "in the tracker" : "after filters";
 
   const active = ["researching", "visited", "applied"];
   const shortlist = all.filter(c => active.includes(c.status)).length;
   $("#stat-shortlist").textContent = shortlist;
+
+  $("#stat-public").textContent = all.filter(c => c.type === "Public").length;
+  $("#stat-private").textContent = all.filter(c => c.type === "Private").length;
 }
 
 // ============================================================
