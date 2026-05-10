@@ -961,31 +961,48 @@ const state = {
 };
 
 // ============================================================
-// PERSISTENCE — uses window.storage (artifact-native; persists across sessions)
+// PERSISTENCE — tries window.storage (artifact-native), falls back to in-memory
 // ============================================================
-async function loadColleges() {
-  try {
-    const result = await window.storage.get(STORAGE_KEY);
-    if (result && result.value) {
-      const parsed = JSON.parse(result.value);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
+let storageAvailable = false;
+
+async function initStorage() {
+  if (typeof window.storage !== "undefined" && window.storage && typeof window.storage.set === "function") {
+    try {
+      await window.storage.set("_ping", "1");
+      storageAvailable = true;
+    } catch (e) {
+      storageAvailable = false;
     }
-  } catch (e) {
-    // Key doesn't exist yet — first time loading. Fall through to seed.
   }
-  // Seed and save
-  await saveColleges(SEED_COLLEGES);
-  return [...SEED_COLLEGES];
+}
+
+async function loadColleges() {
+  await initStorage();
+  if (storageAvailable) {
+    try {
+      const result = await window.storage.get(STORAGE_KEY);
+      if (result && result.value) {
+        const parsed = JSON.parse(result.value);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      // Key doesn't exist yet or read failed — fall through to seed
+    }
+  }
+  const seeded = [...SEED_COLLEGES];
+  await saveColleges(seeded);
+  return seeded;
 }
 
 async function saveColleges(colleges) {
+  if (!storageAvailable) return;
   try {
     await window.storage.set(STORAGE_KEY, JSON.stringify(colleges));
   } catch (e) {
-    console.error("Save failed:", e);
-    showToast("Save failed — try again", "warn");
+    // Silently fail — data stays in memory for the session
+    console.warn("Storage write skipped:", e);
   }
 }
 
